@@ -1,0 +1,233 @@
+const path = require("path");
+const fs = require("fs");
+const { DatabaseSync } = require("node:sqlite");
+const bcrypt = require("bcryptjs");
+const logger = require("./lib/logger");
+const { validatePasswordStrength, generateStrongPassword } = require("./lib/passwordPolicy");
+
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "shop.db");
+const dataDir = path.dirname(DB_PATH);
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+const db = new DatabaseSync(DB_PATH);
+db.exec("PRAGMA journal_mode = WAL");
+db.exec("PRAGMA foreign_keys = ON");
+
+// better-sqlite3-style transaction helper, since node:sqlite's DatabaseSync
+// doesn't ship a built-in .transaction() wrapper.
+db.transaction = (fn) => {
+  return (...args) => {
+    db.exec("BEGIN");
+    try {
+      const result = fn(...args);
+      db.exec("COMMIT");
+      return result;
+    } catch (err) {
+      db.exec("ROLLBACK");
+      throw err;
+    }
+  };
+};
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  pack TEXT DEFAULT '',
+  img TEXT DEFAULT '',
+  price INTEGER NOT NULL,
+  orig INTEGER NOT NULL,
+  active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cust_name TEXT,
+  cust_mobile TEXT,
+  cust_address TEXT,
+  items_json TEXT NOT NULL,
+  total INTEGER NOT NULL,
+  status TEXT DEFAULT 'new',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  failed_attempts INTEGER DEFAULT 0,
+  locked_until TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+`);
+
+// ---------- safe migrations for upgrades from older schema versions ----------
+function columnExists(table, column) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  return cols.some((c) => c.name === column);
+}
+function addColumnIfMissing(table, column, definition) {
+  if (!columnExists(table, column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+addColumnIfMissing("admins", "failed_attempts", "INTEGER DEFAULT 0");
+addColumnIfMissing("admins", "locked_until", "TEXT");
+addColumnIfMissing("admins", "created_at", "TEXT");
+
+// ---------- indexes for query performance ----------
+db.exec(`
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(active);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+`);
+
+// ---------- default settings ----------
+const DEFAULT_SETTINGS = {
+  site_name: "Jallikattu Crackers",
+  tagline: "Best crackers shop in Sivakasi",
+  whatsapp_number: "919095043444",
+  whatsapp_number_2: "919087428871",
+  phone_1: "+91 90950 43444",
+  phone_2: "+91 90874 28871",
+  email: "jallikattucrackers@gmail.com",
+  address: "D.No:13/146, No.972/8, Sundararajapuram, Sivakasi, Tamil Nadu 626189",
+  min_order_tn: "3000",
+  min_order_other: "5000",
+  pricelist_url: "https://jallikattucrackers.in/wp-content/uploads/2024/08/pricelist.pdf",
+  instagram_url: "https://instagram.com/jallikattucrackers",
+  youtube_url: "https://youtube.com/@JallikattuCrackers",
+  facebook_url: "https://www.facebook.com/profile.php?id=61552065061522"
+};
+
+function seedSettings() {
+  const insert = db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");
+  const tx = db.transaction((entries) => {
+    for (const [k, v] of entries) insert.run(k, v);
+  });
+  tx(Object.entries(DEFAULT_SETTINGS));
+}
+
+// No hardcoded default credentials. If ADMIN_PASSWORD isn't supplied, a
+// strong random one is generated and printed ONCE — it is never written to
+// disk by this app. If ADMIN_PASSWORD IS supplied, it must meet the
+// password policy or the server refuses to start (fail fast rather than
+// silently running with a weak admin credential).
+function seedAdmin() {
+  const count = db.prepare("SELECT COUNT(*) AS c FROM admins").get().c;
+  if (count !== 0) return;
+
+  const username = (process.env.ADMIN_USERNAME || "admin").trim();
+  let password = process.env.ADMIN_PASSWORD;
+  let generated = false;
+
+  if (!password) {
+    password = generateStrongPassword();
+    generated = true;
+  } else {
+    const check = validatePasswordStrength(password);
+    if (!check.valid) {
+      throw new Error(
+        "ADMIN_PASSWORD does not meet the password policy:\n  - " +
+          check.errors.join("\n  - ") +
+          "\nSet a stronger ADMIN_PASSWORD in your .env file and restart."
+      );
+    }
+  }
+
+  const hash = bcrypt.hashSync(password, 12);
+  db.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").run(username, hash);
+
+  logger.info("Admin account created", { username, passwordAutoGenerated: generated });
+  if (process.env.NODE_ENV !== "test") {
+    // eslint-disable-next-line no-console
+    console.log("─────────────────────────────────────────────");
+    console.log("Admin account created:");
+    console.log("  username:", username);
+    if (generated) {
+      console.log("  password:", password, " (auto-generated — shown only this once)");
+    } else {
+      console.log("  password: (the ADMIN_PASSWORD you set in .env)");
+    }
+    console.log("  Log in at /admin, then use 'My Account' to change this password.");
+    console.log("─────────────────────────────────────────────");
+  }
+}
+
+function seedCategoriesAndProducts() {
+  const catCount = db.prepare("SELECT COUNT(*) AS c FROM categories").get().c;
+  if (catCount === 0) {
+    const categories = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "seed-categories.json"), "utf8"));
+    const insertCat = db.prepare("INSERT OR IGNORE INTO categories (name, sort_order) VALUES (?, ?)");
+    const tx = db.transaction((cats) => {
+      cats.forEach((name, i) => insertCat.run(name, i));
+    });
+    tx(categories);
+  }
+
+  const prodCount = db.prepare("SELECT COUNT(*) AS c FROM products").get().c;
+  if (prodCount === 0) {
+    const products = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "seed-products.json"), "utf8"));
+    const insertProd = db.prepare(
+      "INSERT INTO products (name, category, pack, img, price, orig, active) VALUES (?, ?, ?, ?, ?, ?, 1)"
+    );
+    const tx = db.transaction((prods) => {
+      prods.forEach((p) => insertProd.run(p.name, p.cat, p.pack || "", p.img || "", p.price, p.orig));
+    });
+    tx(products);
+    logger.info("Seeded initial product catalog", { count: products.length });
+  }
+}
+
+// ---------- brute-force / account lockout helpers ----------
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
+function isAccountLocked(admin) {
+  if (!admin.locked_until) return false;
+  return new Date(admin.locked_until).getTime() > Date.now();
+}
+
+function recordFailedLogin(admin) {
+  const attempts = (admin.failed_attempts || 0) + 1;
+  let lockedUntil = admin.locked_until;
+  if (attempts >= MAX_FAILED_ATTEMPTS) {
+    lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString();
+  }
+  db.prepare("UPDATE admins SET failed_attempts = ?, locked_until = ? WHERE id = ?").run(
+    attempts,
+    lockedUntil,
+    admin.id
+  );
+  return { attempts, lockedUntil };
+}
+
+function resetFailedLogins(adminId) {
+  db.prepare("UPDATE admins SET failed_attempts = 0, locked_until = NULL WHERE id = ?").run(adminId);
+}
+
+seedSettings();
+seedAdmin();
+seedCategoriesAndProducts();
+
+db.isAccountLocked = isAccountLocked;
+db.recordFailedLogin = recordFailedLogin;
+db.resetFailedLogins = resetFailedLogins;
+db.MAX_FAILED_ATTEMPTS = MAX_FAILED_ATTEMPTS;
+db.LOCKOUT_MINUTES = LOCKOUT_MINUTES;
+
+module.exports = db;

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Jallikattu Crackers</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen" class="login-wrap">
+  <form id="loginForm" class="login-card">
+    <div class="login-badge">🎆</div>
+    <h1>Admin Panel</h1>
+    <p class="login-sub">Jallikattu Crackers — sign in to manage your shop</p>
+    <label>Username
+      <input type="text" id="loginUsername" autocomplete="username" required>
+    </label>
+    <label>Password
+      <input type="password" id="loginPassword" autocomplete="current-password" required>
+    </label>
+    <div id="loginError" class="login-error"></div>
+    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+  </form>
+</div>
+
+<!-- ============ DASHBOARD SHELL ============ -->
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">🎆 <span>Jallikattu Admin</span></div>
+    <nav>
+      <button class="nav-link active" data-view="dashboard">Dashboard</button>
+      <button class="nav-link" data-view="products">Products</button>
+      <button class="nav-link" data-view="categories">Categories</button>
+      <button class="nav-link" data-view="orders">Orders</button>
+      <button class="nav-link" data-view="settings">Settings</button>
+      <button class="nav-link" data-view="account">My Account</button>
+    </nav>
+    <div class="sidebar-foot">
+      <a href="/" target="_blank">View site ↗</a>
+      <button id="logoutBtn" class="btn-logout">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h2 id="viewTitle">Dashboard</h2>
+      <span id="whoami" class="whoami"></span>
+    </header>
+
+    <!-- ---------- Dashboard ---------- -->
+    <section id="view-dashboard" class="view">
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-label">Total Products</span><span class="stat-value" id="statProducts">—</span></div>
+        <div class="stat-card"><span class="stat-label">Total Orders</span><span class="stat-value" id="statOrders">—</span></div>
+        <div class="stat-card"><span class="stat-label">New Orders</span><span class="stat-value" id="statNewOrders">—</span></div>
+        <div class="stat-card"><span class="stat-label">Revenue (confirmed)</span><span class="stat-value" id="statRevenue">—</span></div>
+      </div>
+      <div class="panel">
+        <h3>Recent Orders</h3>
+        <div class="table-wrap">
+          <table id="recentOrdersTable">
+            <thead><tr><th>#</th><th>Customer</th><th>Mobile</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Products ---------- -->
+    <section id="view-products" class="view hidden">
+      <div class="toolbar-row">
+        <input type="text" id="productSearch" placeholder="Search products...">
+        <select id="productCatFilter"><option value="">All categories</option></select>
+        <button class="btn btn-primary" id="addProductBtn">+ Add Product</button>
+      </div>
+      <div class="table-wrap">
+        <table id="productsTable">
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Pack</th><th>Price</th><th>MRP</th><th>Active</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Categories ---------- -->
+    <section id="view-categories" class="view hidden">
+      <div class="toolbar-row">
+        <input type="text" id="newCategoryName" placeholder="New category name">
+        <button class="btn btn-primary" id="addCategoryBtn">+ Add Category</button>
+      </div>
+      <div class="table-wrap">
+        <table id="categoriesTable">
+          <thead><tr><th>Name</th><th>Products</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Orders ---------- -->
+    <section id="view-orders" class="view hidden">
+      <div class="toolbar-row">
+        <input type="text" id="orderSearch" placeholder="Search by name / mobile...">
+        <select id="orderStatusFilter">
+          <option value="">All statuses</option>
+          <option value="new">New</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="ordersTable">
+          <thead><tr><th>#</th><th>Customer</th><th>Mobile</th><th>Address</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Settings ---------- -->
+    <section id="view-settings" class="view hidden">
+      <form id="settingsForm" class="settings-form panel">
+        <h3>Shop Info</h3>
+        <div class="grid-2">
+          <label>Site Name <input type="text" name="site_name"></label>
+          <label>Tagline <input type="text" name="tagline"></label>
+        </div>
+        <label>Address <textarea name="address" rows="2"></textarea></label>
+
+        <h3>Contact</h3>
+        <div class="grid-2">
+          <label>Phone 1 <input type="text" name="phone_1"></label>
+          <label>Phone 2 <input type="text" name="phone_2"></label>
+          <label>WhatsApp Number 1 (digits with country code) <input type="text" name="whatsapp_number"></label>
+          <label>WhatsApp Number 2 <input type="text" name="whatsapp_number_2"></label>
+          <label>Email <input type="email" name="email"></label>
+          <label>Pricelist PDF URL <input type="text" name="pricelist_url"></label>
+        </div>
+
+        <h3>Ordering Rules</h3>
+        <div class="grid-2">
+          <label>Minimum Order — Tamil Nadu & Puducherry (₹) <input type="number" name="min_order_tn"></label>
+          <label>Minimum Order — Other States (₹) <input type="number" name="min_order_other"></label>
+        </div>
+
+        <h3>Social Links</h3>
+        <div class="grid-2">
+          <label>Instagram <input type="text" name="instagram_url"></label>
+          <label>YouTube <input type="text" name="youtube_url"></label>
+          <label>Facebook <input type="text" name="facebook_url"></label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+        <span id="settingsSaved" class="saved-msg"></span>
+      </form>
+    </section>
+
+    <!-- ---------- Account ---------- -->
+    <section id="view-account" class="view hidden">
+      <form id="passwordForm" class="settings-form panel">
+        <h3>Change Password</h3>
+        <label>Current Password <input type="password" name="currentPassword" required></label>
+        <label>New Password (min 6 characters) <input type="password" name="newPassword" required minlength="6"></label>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+        <span id="passwordSaved" class="saved-msg"></span>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- ============ Product Modal ============ -->
+<div id="productModal" class="modal-overlay hidden">
+  <form id="productForm" class="modal-card">
+    <h3 id="productModalTitle">Add Product</h3>
+    <input type="hidden" name="id">
+    <label>Name <input type="text" name="name" required></label>
+    <label>Category
+      <input type="text" name="category" list="categoryList" required>
+      <datalist id="categoryList"></datalist>
+    </label>
+    <label>Pack (e.g. "1 box (10 pcs)") <input type="text" name="pack"></label>
+    <div class="grid-2">
+      <label>Selling Price (₹) <input type="number" name="price" required min="0"></label>
+      <label>MRP / Original Price (₹) <input type="number" name="orig" required min="0"></label>
+    </div>
+    <label>Product Image
+      <input type="file" name="imageFile" accept="image/*">
+    </label>
+    <div id="productImgPreviewWrap"><img id="productImgPreview" alt="" class="hidden"></div>
+    <label class="checkbox-row"><input type="checkbox" name="active" checked> Active (visible on site)</label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="productCancelBtn">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Product</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ Order Detail Modal ============ -->
+<div id="orderModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3>Order Details</h3>
+    <div id="orderModalBody"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="orderCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="adminToast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
