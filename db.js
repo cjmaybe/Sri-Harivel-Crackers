@@ -98,20 +98,20 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
 // ---------- default settings ----------
 const DEFAULT_SETTINGS = {
-  site_name: "Jallikattu Crackers",
+  site_name: "Sri Harivel Crackers",
   tagline: "Best crackers shop in Sivakasi",
   whatsapp_number: "919095043444",
   whatsapp_number_2: "919087428871",
   phone_1: "+91 90950 43444",
   phone_2: "+91 90874 28871",
-  email: "jallikattucrackers@gmail.com",
-  address: "D.No:13/146, No.972/8, Sundararajapuram, Sivakasi, Tamil Nadu 626189",
+  email: "sriharivelcrackers@gmail.com",
+  address: "9VWW+F72, Sivakasi - Sattur Rd, Mettamalai, Sivakasi, Tamil Nadu 626203",
   min_order_tn: "3000",
   min_order_other: "5000",
-  pricelist_url: "https://jallikattucrackers.in/wp-content/uploads/2024/08/pricelist.pdf",
-  instagram_url: "https://instagram.com/jallikattucrackers",
-  youtube_url: "https://youtube.com/@JallikattuCrackers",
-  facebook_url: "https://www.facebook.com/profile.php?id=61552065061522"
+  pricelist_url: "#",
+  instagram_url: "#",
+  youtube_url: "#",
+  facebook_url: "#"
 };
 
 function seedSettings() {

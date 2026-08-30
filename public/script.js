@@ -59,7 +59,7 @@ function applySettings(){
   if (strip) {
     strip.innerHTML = "Minimum Order — Tamil Nadu &amp; Puducherry: " + inr(MIN_ORDER_TN) + " &nbsp;•&nbsp; Other States: " + inr(MIN_ORDER_OTHER);
   }
-  document.title = (SETTINGS.site_name || "Jallikattu Crackers") + " — " + (SETTINGS.tagline || "Best Crackers Shop in Sivakasi");
+  document.title = (SETTINGS.site_name || "Sri Harivel Crackers") + " — " + (SETTINGS.tagline || "Best Crackers Shop in Sivakasi");
 }
 function setHref(id, val){
   var el = document.getElementById(id);
@@ -224,7 +224,7 @@ function openWhatsApp(){
   var addr = document.getElementById("custAddress").value.trim();
 
   var lines = [];
-  lines.push("*New Order — " + (SETTINGS.site_name || "Jallikattu Crackers") + "*");
+  lines.push("*New Order — " + (SETTINGS.site_name || "Sri Harivel Crackers") + "*");
   lines.push("*Sivakasi, Tamil Nadu*");
   lines.push("");
   items.forEach(function(it){

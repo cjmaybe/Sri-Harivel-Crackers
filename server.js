@@ -69,6 +69,7 @@ app.use(
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
+        frameSrc: ["'self'", "https://www.google.com"],
         frameAncestors: ["'none'"],
         upgradeInsecureRequests: config.isProd ? [] : null
       }
@@ -550,7 +551,7 @@ app.use(errorHandler);
 if (require.main === module) {
   const server = app.listen(config.PORT, () => {
     logger.info("Server started", { port: config.PORT, env: config.NODE_ENV });
-    console.log(`Jallikattu Crackers server running at http://localhost:${config.PORT}`);
+    console.log(`Sri Harivel Crackers server running at http://localhost:${config.PORT}`);
     console.log(`Admin panel at http://localhost:${config.PORT}/admin`);
   });
 
