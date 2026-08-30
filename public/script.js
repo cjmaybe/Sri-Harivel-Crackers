@@ -140,11 +140,11 @@ function grandTotal(){
   return cartArray().reduce(function(s, it){ return s + it.p.price * it.qty; }, 0);
 }
 function saveCart(){
-  try { localStorage.setItem("jallikattu-cart", JSON.stringify(cart)); } catch(e){}
+  try { localStorage.setItem("sri-harivel-cart", JSON.stringify(cart)); } catch(e){}
 }
 function loadCart(){
   try {
-    var s = localStorage.getItem("jallikattu-cart");
+    var s = localStorage.getItem("sri-harivel-cart");
     if (s) cart = JSON.parse(s);
   } catch(e){ cart = {}; }
 }

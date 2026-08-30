@@ -1,4 +1,4 @@
-# Jallikattu Crackers — Full Website + Admin Panel
+# Sri Harivel Crackers — Full Website + Admin Panel
 
 A complete, working cracker-shop website built on top of your original front end:
 

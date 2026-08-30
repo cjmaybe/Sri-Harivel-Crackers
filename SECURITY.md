@@ -1,4 +1,4 @@
-# Security Audit & Hardening Report — Jallikattu Crackers Shop
+# Security Audit & Hardening Report — Sri Harivel Crackers Shop
 
 **Scope:** full codebase (`server.js`, `db.js`, `public/`, `public/admin/`).
 **Not claimed:** 100% security. No audit of this depth on a hand-built app can

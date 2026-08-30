@@ -1,0 +1,12 @@
+{
+  "command": "npm start",
+  "buildPath": ".",
+  "stack": "nodejs22",
+  "env_variables": {
+    "NODE_ENV": "production",
+    "TRUST_PROXY": "true",
+    "SESSION_SECRET": "REPLACE_WITH_A_LONG_RANDOM_SECRET",
+    "COOKIE_SECURE": "true"
+  },
+  "memory": 256
+}

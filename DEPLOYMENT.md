@@ -1,4 +1,4 @@
-# Deployment Guide — Jallikattu Crackers Shop
+# Deployment Guide — Sri Harivel Crackers Shop
 
 ## 1. Server requirements
 - Node.js **22.5+** (needed for the built-in `node:sqlite` module — no native
@@ -74,22 +74,22 @@ the app on crash and on server reboot.
 **pm2** (simplest):
 ```bash
 npm install -g pm2
-pm2 start server.js --name jallikattu-shop
+pm2 start server.js --name sri-harivel-shop
 pm2 save
 pm2 startup   # follow the printed instructions to enable on-boot start
 ```
 
-**systemd** (`/etc/systemd/system/jallikattu-shop.service`):
+**systemd** (`/etc/systemd/system/sri-harivel-shop.service`):
 ```ini
 [Unit]
-Description=Jallikattu Crackers Shop
+Description=Sri Harivel Crackers Shop
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/jallikattu-shop/hari-shop
-EnvironmentFile=/opt/jallikattu-shop/hari-shop/.env
+WorkingDirectory=/opt/sri-harivel-shop/hari-shop
+EnvironmentFile=/opt/sri-harivel-shop/hari-shop/.env
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=5
@@ -98,7 +98,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 ```bash
-sudo systemctl enable --now jallikattu-shop
+sudo systemctl enable --now sri-harivel-shop
 ```
 
 ## 5. Database backups
@@ -111,7 +111,7 @@ backups older than 30 days (`npm run backup -- --keep 14` to change that).
 
 Schedule it — a nightly cron entry is enough for a shop this size:
 ```
-0 2 * * * cd /opt/jallikattu-shop/hari-shop && node scripts/backup-db.js >> logs/backup.log 2>&1
+0 2 * * * cd /opt/sri-harivel-shop/hari-shop && node scripts/backup-db.js >> logs/backup.log 2>&1
 ```
 
 **Also back up `public/uploads/`** (product images) — the backup script only

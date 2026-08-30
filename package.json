@@ -1,7 +1,7 @@
 {
-  "name": "jallikattu-crackers-shop",
+  "name": "sri-harivel-crackers-shop",
   "version": "1.0.0",
-  "description": "Jallikattu Crackers - full website with admin panel, product/order management and WhatsApp ordering",
+  "description": "Sri Harivel Crackers - full website with admin panel, product/order management and WhatsApp ordering",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
