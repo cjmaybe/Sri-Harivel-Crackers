@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const logger = require("./lib/logger");
 const { validatePasswordStrength, generateStrongPassword } = require("./lib/passwordPolicy");
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "shop.db");
+const DB_PATH = process.env.DB_PATH || (process.env.VERCEL ? "/tmp/shop.db" : path.join(__dirname, "data", "shop.db"));
 const dataDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 

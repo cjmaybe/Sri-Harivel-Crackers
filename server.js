@@ -100,7 +100,7 @@ app.use(attachCsrfToken);
 const staticOpts = { maxAge: config.isProd ? "1d" : 0, etag: true };
 app.use(express.static(path.join(__dirname, "public"), staticOpts));
 
-const uploadDir = path.join(__dirname, "public", "uploads");
+const uploadDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? "/tmp/uploads" : path.join(__dirname, "public", "uploads"));
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 app.use(
   "/uploads",
